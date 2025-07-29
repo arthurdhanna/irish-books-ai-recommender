@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book Recommendation Wizard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-color: #0d4b82;
+      --primary-hover: #0a3d6b;
+      --primary-light: #e6f0f8;
+      --secondary-color: #f1f5f9;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #94a3b8;
+      --border-color: #e2e8f0;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --white: #ffffff;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0d4b82 0%, #1a5a94 100%);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(13, 75, 130, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(13, 75, 130, 0.2) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .wizard-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .wizard-header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .wizard-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(180deg); }
+    }
+
+    .wizard-title {
+      color: var(--white);
+      font-size: 2.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .wizard-subtitle {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1.1rem;
+      font-weight: 400;
+      position: relative;
+      z-index: 1;
+    }
+
+    .wizard-content {
+      padding: 2.5rem 2rem;
+    }
+
+    .step {
+      display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group {
+      margin-bottom: 2rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 1rem 1.25rem;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--text-primary);
+      background: var(--white);
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(13, 75, 130, 0.1);
+    }
+
+    .button-grid {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .button-grid.two-col {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .button-grid.three-col {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .button-grid.four-col {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .option-button {
+      padding: 1rem 1.5rem;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      background: var(--white);
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .option-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(13, 75, 130, 0.1), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .option-button:hover {
+      border-color: var(--primary-color);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .option-button:hover::before {
+      left: 100%;
+    }
+
+    .option-button.selected {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      color: var(--white);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .subgenre-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .subgenre-button {
+      padding: 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      background: var(--white);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .subgenre-button:hover {
+      border-color: var(--primary-color);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .subgenre-button.selected {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      color: var(--white);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 3rem;
+      justify-content: space-between;
+    }
+
+    .nav-button {
+      flex: 1;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-button.primary {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+      color: var(--white);
+      box-shadow: var(--shadow-md);
+    }
+
+    .nav-button.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .nav-button.secondary {
+      background: var(--secondary-color);
+      color: var(--text-secondary);
+      border: 2px solid var(--border-color);
+    }
+
+    .nav-button.secondary:hover {
+      background: var(--white);
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .start-over-btn {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      padding: 0.75rem 1.25rem;
+      background: linear-gradient(135deg, rgba(25, 82, 138, 0.15) 0%, rgba(25, 82, 138, 0.1) 100%);
+      border: 2px solid #19528a;
+      border-radius: var(--radius-lg);
+      color: #19528a;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 4px 12px rgba(25, 82, 138, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .start-over-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .start-over-btn:hover {
+      background: linear-gradient(135deg, #19528a 0%, #1e5f9e 100%);
+      color: var(--white);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(25, 82, 138, 0.3);
+      border-color: #1e5f9e;
+    }
+
+    .start-over-btn:hover::before {
+      left: 100%;
+    }
+
+    .start-over-btn:active {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(25, 82, 138, 0.2);
+    }
+
+    .recommendation {
+      background: linear-gradient(135deg, var(--white) 0%, var(--secondary-color) 100%);
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      margin-top: 2rem;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .recommendation h3 {
+      color: var(--text-primary);
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .recommendation p {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .recommendation img {
+      max-width: 120px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      margin-top: 1rem;
+    }
+
+    .feedback-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .feedback-button {
+      padding: 1rem 1.5rem;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      background: var(--white);
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 180px;
+    }
+
+    .feedback-button:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .feedback-button.like {
+      border-color: var(--success-color);
+      color: var(--success-color);
+    }
+
+    .feedback-button.like:hover {
+      background: var(--success-color);
+      color: var(--white);
+    }
+
+    .feedback-button.dislike {
+      border-color: var(--warning-color);
+      color: var(--warning-color);
+    }
+
+    .feedback-button.dislike:hover {
+      background: var(--warning-color);
+      color: var(--white);
+    }
+
+    .feedback-button.restart {
+      border-color: var(--danger-color);
+      color: var(--danger-color);
+    }
+
+    .feedback-button.restart:hover {
+      background: var(--danger-color);
+      color: var(--white);
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: rgba(13, 75, 130, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-color), var(--primary-hover));
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem 0.5rem;
+      }
+
+      .wizard-title {
+        font-size: 1.875rem;
+      }
+
+      .wizard-content {
+        padding: 2rem 1.5rem;
+      }
+
+      .button-grid.two-col,
+      .button-grid.three-col,
+      .button-grid.four-col {
+        grid-template-columns: 1fr;
+      }
+
+      .subgenre-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-buttons {
+        flex-direction: column;
+      }
+
+      .feedback-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .start-over-btn {
+        position: static;
+        margin-bottom: 1rem;
+        align-self: flex-end;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .wizard-header {
+        padding: 2rem 1.5rem;
+      }
+
+      .wizard-title {
+        font-size: 1.5rem;
+      }
+
+      .wizard-subtitle {
+        font-size: 1rem;
+      }
+    }
+
+    /* Loading animation */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--white);
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="wizard-card">
+      <div class="wizard-header">
+        <h1 class="wizard-title">📚 Read Something Great</h1>
+        <p class="wizard-subtitle">Find your perfect next read in just a few steps</p>
+      </div>
+
+      <div class="wizard-content">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 25%"></div>
+        </div>
+
+        <div id="step1" class="step active">
+          <div class="form-group">
+            <label class="form-label">What was the last book you enjoyed?</label>
+            <input type="text" id="lastBook" class="form-input" placeholder="Enter the title or author..." />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Select your primary interest:</label>
+            <div class="button-grid two-col">
+              <button class="option-button" onclick="selectMainGenre('fiction')">📖 Fiction</button>
+              <button class="option-button" onclick="selectMainGenre('non-fiction')">📚 Non-Fiction</button>
+            </div>
+          </div>
+
+          <div class="nav-buttons">
+            <div></div>
+            <button class="nav-button primary" onclick="goToStep(2)">Embark on a New Adventure</button>
+          </div>
+        </div>
+
+        <div id="step2" class="step">
+     
+          
+          <div class="form-group">
+            <label class="form-label">Select sub-genres (choose multiple if you'd like):</label>
+            <div id="subGenreOptions" class="subgenre-grid"></div>
+          </div>
+
+          <div class="nav-buttons">
+            <button class="nav-button secondary" onclick="goToStep(1)">Start Over</button>
+            <button class="nav-button primary" onclick="goToStep(3)">Lets Set the Mood</button>
+          </div>
+        </div>
+
+        <div id="step3" class="step">
+       
+          
+          <div class="form-group">
+            <label class="form-label">What kind of mood are you in?</label>
+            <div id="moodOptions" class="button-grid four-col"></div>
+          </div>
+
+          <div class="nav-buttons">
+            <button class="nav-button secondary" onclick="goToStep(2)">Lets Change Genre</button>
+            <button class="nav-button primary" onclick="goToStep(4)">Turn The Page</button>
+          </div>
+        </div>
+
+        <div id="step4" class="step">
+          
+          <div class="form-group">
+            <label class="form-label">What kind of recommendation would you like?</label>
+            <div id="preferenceOptions" class="button-grid three-col"></div>
+          </div>
+
+          <div class="nav-buttons">
+            <button class="nav-button secondary" onclick="goToStep(3)">Change the Mood</button>
+            <button class="nav-button primary" onclick="getRecommendation()">
+              <span id="recommendBtnText">Show Me My Book!</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="output" class="recommendation" style="display:none;"></div>
+    
+    <div class="feedback-buttons" id="feedbackButtons" style="display:none;">
+      <button class="feedback-button like" onclick="likeRecommendation()">👍 I like it!</button>
+      <button class="feedback-button dislike" onclick="getAnotherRecommendation()">👎 Show me another</button>
+      <button class="feedback-button restart" onclick="startOver()">🔄 Start Over</button>
+    </div>
+  </div>
+
+  <script>
+    let mainGenre = "";
+    let selectedSubGenres = [];
+    let selectedMoods = [];
+    let selectedPreferences = [];
+    let currentStep = 1;
+
+    function updateProgress() {
+      const progressFill = document.getElementById('progressFill');
+      const progress = (currentStep / 4) * 100;
+      progressFill.style.width = progress + '%';
+    }
+
+    function goToStep(stepNumber) {
+      document.querySelectorAll(".step").forEach(step => step.classList.remove("active"));
+      document.getElementById(`step${stepNumber}`).classList.add("active");
+      currentStep = stepNumber;
+      updateProgress();
+    }
+
+    function startOver() {
+      location.reload();
+    }
+
+    function selectMainGenre(genre) {
+      mainGenre = genre;
+      document.querySelectorAll(".option-button").forEach(btn => btn.classList.remove("selected"));
+      event.target.classList.add("selected");
+      populateSubGenres(genre);
+    }
+
+    function toggleSelection(button, value, selectionArray) {
+      const index = selectionArray.indexOf(value);
+      if (index > -1) {
+        selectionArray.splice(index, 1);
+        button.classList.remove("selected");
+      } else {
+        selectionArray.push(value);
+        button.classList.add("selected");
+      }
+    }
+
+    function populateSubGenres(genre) {
+      const fictionSubs = [
+        "Literary Fiction", "Mystery / Crime / Thriller", "Romance", "Science Fiction",
+        "Fantasy", "Historical Fiction", "Horror", "Adventure", "Young Adult (YA)",
+        "Children's Fiction", "Graphic Novels / Comics", "Dystopian", "Magical Realism"
+      ];
+
+      const nonFictionSubs = [
+        "Biography / Autobiography / Memoir", "History", "Self-help / Personal Development",
+        "Science / Nature", "Travel", "Politics / Current Affairs", "Philosophy",
+        "Religion / Spirituality", "True Crime", "Business / Economics",
+        "Health / Wellness / Fitness", "Cookbooks / Food Writing", "Art / Design / Photography",
+        "Education / Reference"
+      ];
+
+      const subGenreContainer = document.getElementById("subGenreOptions");
+      subGenreContainer.innerHTML = "";
+      selectedSubGenres = [];
+
+      const options = genre === "fiction" ? fictionSubs : nonFictionSubs;
+
+      options.forEach(sub => {
+        const btn = document.createElement("button");
+        btn.className = "subgenre-button";
+        btn.textContent = sub;
+        btn.onclick = () => toggleSelection(btn, sub, selectedSubGenres);
+        subGenreContainer.appendChild(btn);
+      });
+    }
+
+    // Initialize mood buttons
+    const moods = ["😊 Uplifting", "🌙 Dark", "😄 Funny", "🤔 Thoughtful"];
+    const moodOptions = document.getElementById("moodOptions");
+    moods.forEach(mood => {
+      const btn = document.createElement("button");
+      btn.className = "option-button";
+      btn.textContent = mood;
+      btn.onclick = () => toggleSelection(btn, mood, selectedMoods);
+      moodOptions.appendChild(btn);
+    });
+
+    // Initialize preference buttons
+    const preferences = ["🔥 Popular", "💎 Hidden Gem", "✨ New Release"];
+    const preferenceOptions = document.getElementById("preferenceOptions");
+    preferences.forEach(pref => {
+      const btn = document.createElement("button");
+      btn.className = "option-button";
+      btn.textContent = pref;
+      btn.onclick = () => toggleSelection(btn, pref, selectedPreferences);
+      preferenceOptions.appendChild(btn);
+    });
+
+    function getRecommendation() {
+      const btn = document.querySelector('#step4 .nav-button.primary');
+      const btnText = document.getElementById('recommendBtnText');
+      
+      // Show loading state
+      btnText.innerHTML = '<span class="loading"></span> Finding your book...';
+      btn.disabled = true;
+      
+      // Simulate API call delay
+      setTimeout(() => {
+        showRecommendation();
+        btnText.textContent = '✨ Show Me a Book!';
+        btn.disabled = false;
+      }, 2000);
+	  
+	/*
+	// GPT-4 API Integration (commented for reference only)
+
+	const lastBook = document.getElementById("lastBook").value || "no input";
+	const genre = mainGenre;
+	const subGenres = selectedSubGenres.join(", ");
+	const moods = selectedMoods.join(", ");
+	const prefs = selectedPreferences.join(", ");
+
+	const prompt = `
+	You are a book recommender. Based on the following preferences:
+	- Last book enjoyed: ${lastBook}
+	- Genre: ${genre}
+	- Sub-genres: ${subGenres}
+	- Mood: ${moods}
+	- Recommendation style: ${prefs}
+
+	Suggest one book that fits, with title, author, a short synopsis, and a sentence explaining why it matches.
+	`;
+
+	fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer YOUR_OPENAI_API_KEY"
+    },
+    body: JSON.stringify({
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 500,
+      temperature: 0.7
+    })
+	})
+	.then(res => res.json())
+	.then(data => {
+    const resultText = data.choices?.[0]?.message?.content || "Sorry, no recommendation found.";
+    document.getElementById("output").innerHTML = `<p>${resultText}</p>`;
+    document.getElementById("output").style.display = "block";
+    document.getElementById("feedbackButtons").style.display = "flex";
+    document.getElementById('progressFill').style.width = '100%';
+	})
+	.catch(error => {
+    console.error(error);
+    document.getElementById("output").innerHTML = `<p>❗ An error occurred. Please try again later.</p>`;
+    document.getElementById("output").style.display = "block";
+	})
+  .finally(() => {
+    btnText.textContent = '✨ Show Me a Book!';
+    btn.disabled = false;
+  });
+  */
+	  
+    }
+
+    function showRecommendation() {
+      const lastBook = document.getElementById("lastBook").value;
+      const output = document.getElementById("output");
+      const feedbackButtons = document.getElementById("feedbackButtons");
+
+      // Hide all steps
+      document.querySelectorAll(".step").forEach(step => step.classList.remove("active"));
+
+      // Sample recommendation (in a real app, this would come from an API)
+      output.innerHTML = `
+        <h3>📖 "The Seven Husbands of Evelyn Hugo" by Taylor Jenkins Reid</h3>
+        <p><strong>Why we think you'll love it:</strong> Based on your preferences for ${selectedSubGenres.join(", ")} with a ${selectedMoods.join(", ")} mood, this captivating novel offers a perfect blend of glamour, secrets, and emotional depth.</p>
+        <p><strong>Synopsis:</strong> Reclusive Hollywood icon Evelyn Hugo finally decides to tell her life story—but only to unknown journalist Monique Grant. As Evelyn unfolds her tale of ruthless ambition, unexpected friendship, and a great forbidden love, Monique begins to feel a very real connection to the legendary star.</p>
+        <p><strong>Genre:</strong> ${mainGenre === 'fiction' ? 'Historical Fiction / LGBTQ+ Romance' : 'Biography / Entertainment'}</p>
+        <p><strong>Why it matches:</strong> Perfect for readers who enjoyed "${lastBook || 'character-driven stories'}" and are looking for ${selectedPreferences.join(" and ").toLowerCase()} recommendations.</p>
+      `;
+
+      output.style.display = "block";
+      feedbackButtons.style.display = "flex";
+      
+      // Update progress to 100%
+      document.getElementById('progressFill').style.width = '100%';
+    }
+
+    function likeRecommendation() {
+      alert("Great! We're glad you like the recommendation. Happy reading! 📚");
+    }
+
+    function getAnotherRecommendation() {
+      getRecommendation();
+    }
+
+    // Initialize progress
+    updateProgress();
+  </script>
+</body>
+</html>
+
